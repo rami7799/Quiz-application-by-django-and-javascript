@@ -1,0 +1,84 @@
+{% extends "shared/_MainLayout.html" %}
+
+{% block css %}
+    <style>
+        #quiz-box {
+            border: 1px solid rgb(200, 255, 0);
+            border-radius: 1rem;
+            width:max-content;
+            
+        }
+    </style>
+{% endblock css %}
+
+
+{% block content %}
+    <h2>{{ obj.name }}</h2>
+    <form id="quiz-form" class="mt-3 mb-3" type="POST">
+        {% csrf_token %}
+        <div id="quiz-box"></div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+{% endblock content %}
+
+
+{% block script %} 
+    <script>
+        $(document).ready(function() {
+            const url = window.location.href;
+            console.log(url)
+            $.ajax({
+                type: "GET",
+                url: url + "data",
+                success: function (response) {
+                    // console.log(response.data)
+                    const data = response.data
+                    data.forEach(el => {
+                        for (const [question , answers] of Object.entries(el)) {
+                            $("#quiz-box").append(`
+                                
+                                <div class="mb-2">
+                                    <b>${question}</b>
+                                </div>   
+                                `)
+                                answers.forEach(answer => {
+                                    $("#quiz-box").append(`
+                                        <div>
+                                            <input type="radio" class="ans" id="${question}-${answer}" name="${question}" value="${answer}" > 
+                                            <label for="${question}"> ${answer}  
+                                        </div>
+                                    `)
+                                })
+                            "<hr>"
+                        }
+                    });
+                }
+            });
+            $("#quiz-form").on('submit' , function(e) {
+                e.preventDefault()
+                var data = {}
+                const element = [...document.getElementsByClassName("ans")]
+                data["csrfmiddlewaretoken"] = $("input[name=csrfmiddlewaretoken]").val()
+                element.forEach(el => {
+                    if (el.checked) {
+                        data[el.name] = el.value
+                    }
+                    else{
+                        if (!data[el.name]) {
+                            data[el.name] = null
+                        }
+                    }
+                })
+                $.ajax({
+                    type: "POST",
+                    url: url + "save",
+                    data: data,
+                    success: function (response) {
+                        console.log(response)
+                    }                    
+                });  
+            })
+        })
+    </script>
+{% endblock script %}
