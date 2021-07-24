@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # installed apps 
     "quiz",
     "question",
+    "result"
 ]
 
 MIDDLEWARE = [

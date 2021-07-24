@@ -1,8 +1,9 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from .models import Quiz
 import random
 from question.models import Question , Answer
+from result.models import Result
 
 
 def home(request):
@@ -15,11 +16,16 @@ def home(request):
 
 def quiz_view(request , pk):
     quiz = Quiz.objects.get(pk=pk)
+    # if Result.objects.filter(user=request.user , quiz_id=quiz.id).exists():
+    #     return render(request , "before_done.html")
+
     return render(request , "quiz.html" , {"obj" : quiz})
 
 
 def quiz_data_view(request , pk):
     quiz = Quiz.objects.get(pk=pk)
+    # if Result.objects.filter(user=request.user , quiz_id=quiz.id).exists():
+    #     return JsonResponse({"error" : "invalid"})
 
     question = []
     for q in quiz.question_set.all():
@@ -48,9 +54,11 @@ def quiz_save_data(request , pk):
 
         user = request.user
         quiz = Quiz.objects.get(pk=pk)
+        quiz.done = True
+        quiz.save()
 
         score = 0
-        muliplier = 100 / quiz.number_of_questions
+        multiplier = 100 / quiz.number_of_questions
         results = []
         correct_answer = None
 
@@ -73,8 +81,11 @@ def quiz_save_data(request , pk):
                 results.append({str(q) : "Not Answered"})
 
         score_ = score 
+        # Result.objects.create(user=user , quiz_id=quiz.id , score=score_)
 
-        if score_ >= quiz.required_score_to_pass:
-            return JsonResponse({"Passed" : True , "Score" : score_})
-        else:
-            return JsonResponse({"Passed" : False})
+    return redirect("/")
+
+        # if score_ >= quiz.required_score_to_pass:
+        #     return redirect("/")
+        # else:
+        #     return redirect("/")
